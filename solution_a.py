@@ -89,12 +89,42 @@ def get_LL(dictionary,start,end):
     parameters start and end together determines what we want to extract from LL.
     :return: a list
     """
+
+    "the complexity of this algorithm is n2"
     ll_list={}
     for i in dictionary:
         for j in dictionary[i]:
             line = SplitStrip(j)
+            #line = j
             addvalue(ll_list,i,line[start:end])
     return ll_list
+
+def get_LL_new(dictionary,start,end,index):
+    """
+    Get a dictionary, whose keys are Storm IDs, and whose values are latitudes and longitudes pairs, or date and time pairs,
+    according to parameters start and end
+    :param dictionary: Usually would be LL.
+    :param start: Starting index of sublists
+    :param end:Ending index of sublists.
+    parameters start and end together determines what we want to extract from LL.
+    :return: a list
+    """
+
+    "the complexity of this algorithm is n2"
+    """
+    ll_list={}
+    for i in dictionary:
+        for j in dictionary[i]:
+            line = SplitStrip(j)
+            #line = j
+            addvalue(ll_list,i,line[start:end])
+    """
+    #print(dictionary[index])
+    line = []
+    for x in dictionary[index]:
+        line.append(SplitStrip(x)[start:end])
+    #return ll_list
+    return line
 
 
 def c_storm_hurri(idlist):
@@ -172,10 +202,18 @@ name[Id]=line0[1]
 LineNum=int(line0[2])
 end=start+LineNum
 DT_FirstLandfall={}
-    
+
+# split strip only once
+df_strip=[]
+for line in df:
+    df_strip.append(SplitStrip(line))
+
+df = df_strip
+
 while end <= len(df):
     for line in df[start:end]:
-        cleanline=SplitStrip(line)
+        #cleanline=SplitStrip(line)
+        cleanline = line
         addvalue(Date,Id,cleanline[0])
         addvalue(Timepoints,Id, cleanline[1])
         addvalue(MSW,Id,cleanline[6]+', '+cleanline[0])
@@ -195,9 +233,12 @@ while end <= len(df):
                 HU.append(Id)
     addvalue(landfall,Id,countLF)
     if end != len(df): 
-        LineNum=int(SplitStrip(df[end])[2])
-        Id=SplitStrip(df[end])[0]
-        name[Id]=SplitStrip(df[end])[1]
+        #LineNum=int(SplitStrip(df[end])[2])
+        LineNum = int(df[end][2])
+        #Id=SplitStrip(df[end])[0]
+        Id = df[end][0]
+        #name[Id]=SplitStrip(df[end])[1]
+        name[Id] = df[end][1]
         countLF=0
         start=end+1
         end=start+LineNum
@@ -207,9 +248,18 @@ while end <= len(df):
 
 time={}
 distance={}
+# this is wrong, it tries to compute all dictionary  and return new list, instead we can optimize for just the focus index only
+"""
 for i in LL:
+    print(get_LL(LL,0,2)[i])
+    print(get_LL_new(LL, 0, 2, i))
     addvalue(distance,i,get_distance(get_LL(LL,0,2)[i]))
     addvalue(time,i,get_time(get_LL(LL,2,4)[i]))
+"""
+for i in LL:
+    addvalue(distance,i,get_distance(get_LL_new(LL,0,2,i)))
+    addvalue(time,i,get_time(get_LL_new(LL,2,4,i)))
+
 
 # Deal with highest Maximum sustained wind (in knots) and when it occurred (date & time)
 
@@ -219,7 +269,8 @@ compare_s=0
 compare_t=0
 for i in MSW:
     for j in MSW[i]:
-        line=SplitStrip(j)
+        #line=SplitStrip(j)
+        line = j
         if int(line[0])>compare_s:
             compare_s = int(line[0])
             compare_t = int(line[1])
